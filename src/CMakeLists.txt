@@ -1,0 +1,2 @@
+add_subdirectory(Grading)
+add_subdirectory(ThirdPartyLibraries)

@@ -1,4 +1,4 @@
-/Debug/
-/Release/
+/build/
 /CmakeFiles/
 CmakeCache.txt
+.vscode
