@@ -3,8 +3,12 @@ cmake_minimum_required(VERSION 3.10)
 # Set the project name
 project(ECE529-Project)
 # Specify the C++ standard
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++20")
+
+
+find_package(FFTW3f REQUIRED HINTS C:/Users/lstup.LANCE/source/repos/ECE529/ECE529-Project/src/ThirdPartyLibraries/fftw-3.3.5-dll64)
 
 add_subdirectory(src)
 
@@ -18,11 +22,12 @@ set( headers
 	)
 
 
-set(MY_UNIX_PATH ${CMAKE_CURRENT_SOURCE_DIR}/Data)
+set(MY_UNIX_PATH ${CMAKE_CURRENT_SOURCE_DIR}/Data/)
 string(REPLACE "/" "\\\\" DATA_DIR ${MY_UNIX_PATH})
-
+message("data directory ${DATA_DIR}")
 add_compile_definitions(DATA_DIR="${DATA_DIR}")
 
 # Add an executable target
 add_executable(MyProject ${sources})
-target_link_libraries(MyProject PUBLIC Grading ImageIO)
+target_link_libraries(MyProject PUBLIC Grading ImageIO Wavelets ${FFTW3f_LIBRARY_DIRS})
+target_include_directories(MyProject PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/ThirdPartyLibraries/fftw-3.3.5-dll64/lib)
