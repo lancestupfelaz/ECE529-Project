@@ -7,12 +7,12 @@ InputImage_bytes = size(grayScaleImg,1) * size(grayScaleImg,2);
 disp('Input image size: ' + string(InputImage_bytes/1000) + '[kb]');
 
 %% Wavelet transform
-wavelet_name = 'db1';
+wavelet_name = 'haar';
 levels_of_decomposition = 4;
 [c,s] = wavedec2(grayScaleImg, levels_of_decomposition, wavelet_name);
 packed_output = [];
 
-percentOfCoefficentsKept = [0.005 0.01 0.1 0.5]; % 10%
+percentOfCoefficentsKept = [0.01 0.01 00.1 0.5]; % 10%
 TransmittedImage_bytes = 0;
 
 for level=1:levels_of_decomposition
