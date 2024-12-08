@@ -8,7 +8,7 @@ disp('Input image size: ' + string(InputImage_bytes/1000) + '[kb]');
 
 %% Wavelet transform
 wavelet_name = 'haar';
-levels_of_decomposition = 4;
+levels_of_decomposition = 2;
 [c,s] = wavedec2(grayScaleImg, levels_of_decomposition, wavelet_name);
 packed_output = [];
 
