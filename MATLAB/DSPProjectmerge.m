@@ -480,15 +480,7 @@ function output=convRowsAndDecimate(filter,data)
     end
 
 end
-
-%% Compare
-% Calculate compression ratio
-
-%% Plots
-% plot the decoded images side by side
-% maybe plot a zoomed in portion side by side highlighting difference?
-
-%% Functions
+%% DCT Functions
 
 function padded_image = pad_image_to_multiple_of_8(image)
     % Get the size of the image
