@@ -20,7 +20,7 @@ image = pad_image_to_multiple_of_8(needspadding);
 % subplot(1, 2, 2), imshow(image), title('Padded Image');
 %if image isn't multiple of 8 duplicate edge pixels for coherency
 % for now just truncate
-quality = 98; %quality for DCT quantization table
+%quality = 98; %quality for DCT quantization table
 
 
 %% DCT
@@ -89,10 +89,9 @@ for m = 1:8:size(DCToutCr,1)
     end
 end
 
-nnz(DCToutCr)/(size(DCToutCr,1) * size(DCToutCr,2))
+%approx compression ratio
+nnz(DCToutCr)/(size(DCToutCr,1) * size(DCToutCr,2));
 numbcoeffs = sum(DCToutCr > abs(2),'all');
-
-mean(DCToutCr > abs(2),'all')
 % Create a logical mask for values greater than 1 (ignoring sign)
 mask = abs(DCToutCr) > 2;
 
