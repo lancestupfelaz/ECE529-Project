@@ -12,12 +12,10 @@ set( headers
 
 
 add_library(${target} ${sources} ${headers} )
-target_link_libraries(${target} FFTW3f)
 target_include_directories(${target} 
 PUBLIC
 	${CMAKE_CURRENT_SOURCE_DIR}
 PRIAVTE
-	${FFTW3f_INCLUDE_DIRS}
 
 )
 

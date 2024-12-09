@@ -5,11 +5,12 @@ close all
 %im=imread('../../Data/checkerboard_1024x1024','png');
 %im=imread('../../Data/dog_1024x1024','png');
 %im=imread('../../Data/AbrahamLincoln_1024x1024','png');
-im=imread('../../Data/women_512x512','png');
+%im=imread('../../Data/women_512x512','png');
 
 % convert color image to gray scale.
-grayScaleImg = rgb2gray(im);
-figure; imshow(grayScaleImg)
+%grayScaleImg = rgb2gray(im);
+grayScaleImg = [1 2 3 4; 5 6 7 8; 9 10 11 12; 13 14 15 16 ]
+%figure; imshow(grayScaleImg)
 
 % levels = [1,2,3,4,5,6];
 % thresholds = [1 0.5 0.1 0.05 0.01 0.005 0.001 ];
@@ -29,7 +30,7 @@ figure; imshow(grayScaleImg)
 % figure; imagesc((cr)); colorbar; ylabel('level'); xlabel('threshold')
 % 
 
-waveletProcessing(grayScaleImg, 5, 0.015 );
+waveletProcessing(grayScaleImg, 1, 1 );
 
 %% wavelet transform parameters
 function [mse,cr] = waveletProcessing(grayScaleImg, levels, threshold)

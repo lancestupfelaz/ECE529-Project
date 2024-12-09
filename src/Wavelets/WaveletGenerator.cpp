@@ -1,131 +1,252 @@
 #include "WaveletGenerator.hpp"
 #include <stdexcept>
 #include <cmath>
+#include <iostream>
+#include <iomanip>
 
 // Lets make sure this algorithm works
 
 namespace WaveletGenerator
 {
-#define PI 3.14f
 
-	template<unsigned int length>
-	std::array<float, length> generateMoreletWavelet(float k)
+	void customDWT(std::vector<std::vector<float>> image, unsigned int levels)
 	{
 
 
-		//static_assertstatic_assert
+		std::vector<std::vector<float>> L = lowpassRowsAndDecimate(image);
 
-		std::array<float, length> output = {};
+		std::vector<std::vector<float>> LL = lowpassColumnsAndDecimate(L);
+		std::vector<std::vector<float>> LH = highpassColumnsAndDecimate(L);
 
-		// lets evaluate the wavelet function at each of the samples of the vector
-		for (size_t i = 0; i < length; i++)
+
+
+		printMatrix(LL);
+		printMatrix(LH);
+
+
+	}
+
+	std::vector<std::vector<float>> highpassRowsAndDecimate(std::vector<std::vector<float>>& input)
+	{
+		std::vector<float> filter = { 0.7071f, -0.7071f };
+		return convRowsAndDecimate(filter, input);
+	}
+	std::vector<std::vector<float>> highpassColumnsAndDecimate(std::vector<std::vector<float>>& input)
+	{
+		std::vector<float> filter = { 0.7071f, -0.7071f };
+		return convColumnsAndDecimate(filter, input);
+	}
+
+
+	std::vector<std::vector<float>> lowpassRowsAndDecimate(std::vector<std::vector<float>>& input)
+	{
+		std::vector<float> filter = { 0.7071f, 0.7071f };
+
+		return convRowsAndDecimate(filter, input);
+	}
+
+	std::vector<std::vector<float>> lowpassColumnsAndDecimate(std::vector<std::vector<float>>& input)
+	{
+		std::vector<float> filter = { 0.7071f, 0.7071f };
+
+		return convColumnsAndDecimate(filter, input);
+	}
+
+	std::vector<std::vector<float>> convRowsAndDecimate(const std::vector<float>& filter, const std::vector<std::vector<float>>& input)
+	{
+		const unsigned int numColumns = input.size();
+		const unsigned int numRows = input[0].size();
+
+		std::vector<std::vector<float>> output = formOutputMatrix(numRows, numColumns / 2);
+
+		for (unsigned int rowIdx = 0; rowIdx < numRows; rowIdx++)
 		{
-			// lets make the vector start at 0 and go to length: 0,1,2,...length
-			// lets normalize the vector scale between [0,1]
-			// lets multiply by 2pi then subtract pi to get a distrabution between [-pi,pi]
 
-			float t = static_cast<float>(i) / static_cast<float>(length) * 2.0f * PI - PI;
+			std::vector<float> row = getRow(input, rowIdx);
+			std::vector<float> convRow = convolve(row, filter);
+			std::vector<float> downSampledRow = downsample(convRow, 2);
 
-
-			// wavelet function = exp(-abs(t/k)).*cos(2*pi*t)
-			// where t is the vector size of the length.
-			// where k is the stepness factor of the complex envelope
-
-			output[i] = std::exp(-std::abs(t / k)) * std::cos(2 * PI * t);
-
+			setRow(downSampledRow, output, rowIdx);
 		}
 
+		return output;
+	}
 
+	// input is rows by columns
+	std::vector<std::vector<float>> convColumnsAndDecimate(const std::vector<float>& filter, const std::vector<std::vector<float>>& input)
+	{
+		const unsigned int numColumns = input[0].size();
+		const unsigned int numRows = input.size();
 
+		std::vector<std::vector<float>> output = formOutputMatrix(numRows / 2, numColumns);
+
+		for (unsigned int columnIdx = 0; columnIdx < numColumns; columnIdx++)
+		{
+
+			std::vector<float> column = getColumn(input, columnIdx);
+			std::vector<float> convColumn = convolve(column, filter);
+			std::vector<float> downSampledColumn = downsample(convColumn, 2);
+
+			setColumn(downSampledColumn, output, columnIdx);
+		}
+
+		return output;
+	}
+
+	std::vector<std::vector<float>> formOutputMatrix(const unsigned int rows, const unsigned int columns)
+	{
+		std::vector<std::vector<float>> output;
+		output.resize(rows);
+
+		for (int rowIdx = 0; rowIdx < rows; rowIdx++)
+		{
+			output[rowIdx].resize(columns);
+		}
 
 		return output;
 	}
 
 
-	// https://en.wikipedia.org/wiki/Convolution
-
-	fftwf_complex* convolve(float a[], float b[], int a_size, int b_size)
+	std::vector<float> getColumn(const std::vector<std::vector<float>>& input, const unsigned int columnIdx)
 	{
-		int largest_signal_length = std::max(a_size, b_size);
-		int length_pow_2 = 2 << static_cast<int>(std::ceil(std::log2f(largest_signal_length)));
+		const unsigned int numRows = input.size();
+		std::vector<float> column(numRows);
 
-		float* a_in = new float[length_pow_2];
-		float* b_in = new float[length_pow_2];
-
-		fftwf_complex* out_a = new fftwf_complex[length_pow_2];
-		fftwf_complex* out_b = new fftwf_complex[length_pow_2];
-
-		fftwf_complex* in_c = new fftwf_complex[length_pow_2];
-		fftwf_complex* out_c = new fftwf_complex[length_pow_2];
-
-
-		fftwf_plan plan_a;
-		fftwf_plan plan_b;
-
-		// we need to zero pad signals so they are the same length
-
-		for (size_t i = 0; i < length_pow_2; i++)
+		for (unsigned int rowIdx = 0; rowIdx < numRows; rowIdx++)
 		{
-			a_in[i] = (a_size >= i) ? a[i] : 0.0;
-			b_in[i] = (a_size >= i) ? b[i] : 0.0;
+			column[rowIdx] = input[rowIdx][columnIdx];
 		}
 
-
-		plan_a = fftwf_plan_dft_r2c_1d(length_pow_2, a, out_a, FFTW_ESTIMATE);
-		plan_b = fftwf_plan_dft_r2c_1d(length_pow_2, b, out_b, FFTW_ESTIMATE);
-
-
-		fftwf_execute(plan_a);
-		fftwf_execute(plan_b);
-
-		delete[] a_in;
-		delete[] b_in;
-
-		fftwf_destroy_plan(plan_a);
-		fftwf_destroy_plan(plan_b);
-
-		// multiply plan_a and b
-		for (size_t i = 0; i < length_pow_2; i++)
+		return column;
+	}
+	std::vector<float> getRow(const std::vector<std::vector<float>>& input, const unsigned int rowIdx)
+	{
+		return input[rowIdx];
+	}
+	void setColumn(const std::vector<float> input, std::vector<std::vector<float>>& output, const unsigned int columnIdx) 
+	{
+		for (size_t rowIdx = 0; rowIdx < input.size(); rowIdx++)
 		{
-			//(a + ib) (c + id) = (ac - bd) + i(ad + bc).
-			float real = out_a[i][0] * out_b[i][0] - out_a[i][1] * out_b[i][1];
-			float imag = out_a[i][0] * out_b[i][1] + out_b[i][0] * out_a[i][1];
-			in_c[i][0] = real; // real
-			in_c[i][1] = imag; // complex
-
+			output[rowIdx][columnIdx] = input[rowIdx];
 		}
-
-		fftwf_plan plan_inverse = fftwf_plan_dft_1d(length_pow_2, in_c, out_c, FFTW_BACKWARD, FFTW_ESTIMATE);
-
-		fftwf_execute(plan_inverse);
-		fftwf_destroy_plan(plan_inverse);
-
-
-		fftw_cleanup();
-
-		return out_c;
+	}
+	void setRow(const std::vector<float> input, std::vector<std::vector<float>>& output, const unsigned int rowIdx)
+	{
+		output[rowIdx] = input;
 	}
 
+	std::vector<float> downsample(const std::vector<float>& input, const int rate)
+	{
+		std::vector<float> output;
+		output.resize(input.size() / 2);
+
+		for (int i = 0; i / 2 < output.size(); i += 2)
+		{
+			output[i / 2] = input[i];
+		}
+
+		return output;
+	}
+
+	std::vector<float> convolve(const std::vector<float>& a, const std::vector<float>& b)
+	{
+		// https://en.wikipedia.org/wiki/Convolution
+
+		int n = a.size(); // Size of array a
+		int m = b.size(); // Size of array b
+
+		// Result size will be n + m - 1
+		std::vector<float> result(n + m - 1, 0.0f);
+
+		// Perform convolution
+		for (int i = 0; i < n; ++i) {
+			for (int j = 0; j < m; ++j) {
+				result[i + j] += a[i] * b[j];
+			}
+		}
+		
+		result.erase(result.begin());
+		
+		return result;
+
+
+	}
+
+	void printMatrix(std::vector<std::vector<float>> input)
+	{
+		// Determine the width for formatting
+		int width = 8; // Adjust as needed for larger or smaller values
+		int precision = 2; // Number of decimal places
+
+		for (const auto& row : input) {
+			for (const auto& value : row) {
+				std::cout << std::setw(width) << std::fixed << std::setprecision(precision) << value;
+			}
+			std::cout << std::endl; // Move to the next line after printing a row
+		}
+		
+	}
+
+	void testCustomDWT()
+	{
+		std::vector<std::vector<float>> input = {
+			{1.0f, 2.0f, 3.0f, 4.0f},
+			{5.0f, 6.0f, 7.0f, 8.0f},
+			{9.0f,10.0f,11.0f,12.0f},
+			{13.0f,14.0f,15.0f,16.0f}
+		};
+
+
+		customDWT(input, 1);
+
+
+	}
 	void testConvolve()
 	{
-		float a[] = { 1, 2, 3, 2, 1 };
-		float b[] = { 1, 2 };
+		// remove the first value from the convolution so we end up with an output the same size of the input.
+		// equation { 1, 2, 3, 2, 1} conv { 1, 2 } =  {4, 7, 8, 5, 2}
 
-		fftwf_complex * output = convolve(a, b, 5, 2);
+		std::vector<float> a = { 1, 2, 3, 2, 1 };
+		std::vector<float> b = { 1, 2 };
 
-		for (size_t i = 0; i < 5+2-1; i++)
+
+		std::vector<float> c = convolve(a, b);
+
+		
+
+
+		std::vector<float> expectedValue = { 4, 7, 8, 5, 2 };
+		if (expectedValue == c)
 		{
-			printf("%lf+1i*%lf\n", output[i][0], output[i][1]);
+			std::cout << "Passed" << std::endl;
+		}
+		else
+		{
+			std::cout << "Failed";
+			for (size_t i = 0; i < c.size(); i++)
+			{
+				std::cout << c[i] << ",";
+			}
+		}
+	}
+	void testDownsample()
+	{
+		std::vector<float> a = { 1, 2, 3, 2, 1, 5 };
+		std::vector<float> output;
+		output.reserve(3);
+		output = downsample(a, 2);
+
+		// expect {1, 3, 1}
+		std::vector<float> expect = { 1, 3, 1 };
+		if (expect == output)
+		{
+			std::cout << "Passed" << std::endl;
+		}
+		else
+		{
+			std::cout << "failed";
 		}
 
-	}
-
-
-	void testWavelet()
-	{
-		constexpr unsigned int waveletLength = 201U;
-		constexpr float k = 1.0f;
-		std::array<float, waveletLength> wavelet = generateMoreletWavelet<waveletLength>(k);
 
 	}
 

@@ -15,7 +15,9 @@ void printImageStats(char* fn);
 int main() {
     //printImageStats("paris-1213603.jpg");
     WaveletGenerator::testConvolve();
-    
+    WaveletGenerator::testDownsample();
+    WaveletGenerator::testCustomDWT();
+
     /*  constexpr unsigned int waveletLength = 201U;
     std::array<float, waveletLength> wavelet = WaveletGenerator::generateMoreletWavelet<waveletLength>(1);
     for (size_t i = 0; i < waveletLength; i++)
