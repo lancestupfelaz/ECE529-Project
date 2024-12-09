@@ -11,17 +11,59 @@ namespace WaveletGenerator
 
 	void customDWT(std::vector<std::vector<float>> image, unsigned int levels)
 	{
+		std::vector<std::vector<std::vector<std::vector<float>>>> coefficentsByLevel;
+		coefficentsByLevel.resize(levels);
+		
+
+		for (unsigned int level = 0; level < levels; level++)
+		{
+			std::vector<std::vector<float>> L = lowpassRowsAndDecimate(image);
+
+			std::vector<std::vector<float>> LL = lowpassColumnsAndDecimate(L);  // Approximate coefficents
+			std::vector<std::vector<float>> LH = highpassColumnsAndDecimate(L); // Horizontal coefficents
+
+			std::vector<std::vector<float>> H = highpassRowsAndDecimate(image);
+
+			std::vector<std::vector<float>> HH = highpassColumnsAndDecimate(H); // Veritcal coefficents
+			std::vector<std::vector<float>> HL = lowpassColumnsAndDecimate(H);  // Diagonal coefficents
 
 
-		std::vector<std::vector<float>> L = lowpassRowsAndDecimate(image);
+			// final level has four coefficent matrices
+			unsigned int numCoefficents = (level == levels - 1) ? 4 : 3;
+			coefficentsByLevel[level].resize(numCoefficents);
 
-		std::vector<std::vector<float>> LL = lowpassColumnsAndDecimate(L);
-		std::vector<std::vector<float>> LH = highpassColumnsAndDecimate(L);
+			coefficentsByLevel[level][0] = LH;
+			coefficentsByLevel[level][1] = HH;
+			coefficentsByLevel[level][2] = HL;
+			
+			if (level == levels - 1)
+			{
+				coefficentsByLevel[level][3] = LL;
+			}
+			else
+			{
+				image = LL;
+			}
+			
+			std::cout << "=== Level " << level + 1 << " ===";
+
+			std::cout << "\nH\n";
+			printMatrix(LH);
+			
+			std::cout << "\nV\n";
+			printMatrix(HH);
+
+			std::cout << "\nD\n";
+			printMatrix(HL);
+
+			if (level == levels - 1)
+			{
+				std::cout << "\nA\n";
+				printMatrix(LL);
+			}
 
 
-
-		printMatrix(LL);
-		printMatrix(LH);
+		}
 
 
 	}
@@ -197,7 +239,7 @@ namespace WaveletGenerator
 		};
 
 
-		customDWT(input, 1);
+		customDWT(input, 2);
 
 
 	}
