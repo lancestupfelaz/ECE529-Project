@@ -59,7 +59,6 @@ DCToutCr = zeros(size(Crmean));
 DCToutCb = zeros(size(Cbmean));
 
 % Perform DCT on 8x8 blocks and store the results
-tic
 for m = 1:8:size(Crmean,1)
     for n = 1:8:size(Crmean,2)
         blockCr = Crmean(m:m+7, n:n+7);
@@ -69,7 +68,6 @@ for m = 1:8:size(Crmean,1)
         DCToutCb(m:m+7, n:n+7) = maxsforwardDCT(blockCb);
     end
 end
-encodeTime = toc;
 
 % Define a standard JPEG quantization table for chrominance
 chromqtable = [
@@ -90,24 +88,6 @@ for m = 1:8:size(DCToutCr,1)
         DCToutCb(m:m+7, n:n+7) = round(DCToutCb(m:m+7, n:n+7) ./ chromqtable);
     end
 end
-
-
-
-
-encodeTime = toc;
-% Display encoding time
-disp(['Encode Time: ', num2str(encodeTime)]);
-
-%Quantization lunimocity and chrominance
-%lumqtable = jpeg_qtable(quality);
-for m = 1:8:size(Crmean,1)
-    for n = 1:8:size(Crmean,2)
-        DCToutCr(m:m+7,n:n+7) = round(DCToutCr(m:m+7,n:n+7)./ chromqtable);
-        DCToutCb(m:m+7,n:n+7) = round(DCToutCb(m:m+7,n:n+7)./ chromqtable);
-    end
-end
-
-%Encoding
 
 % DCTdecode
 % perform inverse DCT II or DCTIII algorithm for all channels Y, Cb, Cr
