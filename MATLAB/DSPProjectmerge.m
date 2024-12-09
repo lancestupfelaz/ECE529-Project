@@ -72,13 +72,13 @@ encodeTime = toc;
 lumqtable = jpeg_qtable(quality,0);
 chromqtable = jpeg_qtable(quality,1);
 
-% for m = 1:8:size(Crmean,1)
-%     for n = 1:8:size(Crmean,2)
-% 
-%         DCToutCr(m:m+7,n:n+7) = round(DCToutCr(m:m+7,n:n+7)./ chromqtable);
-%         DCToutCb(m:m+7,n:n+7) = round(DCToutCb(m:m+7,n:n+7)./ chromqtable);
-%     end
-% end
+for m = 1:8:size(Crmean,1)
+    for n = 1:8:size(Crmean,2)
+
+        DCToutCr(m:m+7,n:n+7) = round(DCToutCr(m:m+7,n:n+7)./ chromqtable);
+        DCToutCb(m:m+7,n:n+7) = round(DCToutCb(m:m+7,n:n+7)./ chromqtable);
+    end
+end
 
 %Encoding
 
@@ -98,13 +98,13 @@ end
 
 %Decoding
 %De-Quantization
-% for m = 1:8:size(DCToutCr,1)
-%     for n = 1:8:size(DCToutCr,2)
-%         %getting the block back from the coefficients
-%         IDCToutCr(m:m+7,n:n+7) = IDCToutCr(m:m+7,n:n+7).* chromqtable;
-%         IDCToutCb(m:m+7,n:n+7) = IDCToutCr(m:m+7,n:n+7).*chromqtable;
-%     end
-% end
+for m = 1:8:size(DCToutCr,1)
+    for n = 1:8:size(DCToutCr,2)
+        %getting the block back from the coefficients
+        IDCToutCr(m:m+7,n:n+7) = IDCToutCr(m:m+7,n:n+7).* chromqtable;
+        IDCToutCb(m:m+7,n:n+7) = IDCToutCb(m:m+7,n:n+7).*chromqtable;
+    end
+end
 
 IDCToutCr = IDCToutCr + 129;
 IDCToutCb = IDCToutCb + 129;
