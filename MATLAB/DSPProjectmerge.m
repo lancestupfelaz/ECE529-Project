@@ -89,12 +89,31 @@ for m = 1:8:size(DCToutCr,1)
     end
 end
 
+nnz(DCToutCr)/(size(DCToutCr,1) * size(DCToutCr,2))
+numbcoeffs = sum(DCToutCr > abs(2),'all');
+
+mean(DCToutCr > abs(2),'all')
+% Create a logical mask for values greater than 1 (ignoring sign)
+mask = abs(DCToutCr) > 2;
+
+% Apply the mask to the DCT coefficients
+filtered_values = DCToutCr .* mask;
+
+% Remove zero values resulting from the masking process
+filtered_values = filtered_values(filtered_values ~= 0);
+
+% Plot the histogram
+hist(filtered_values);
+title('Histogram of DCT Coefficients (|value| > 1)');
+xlabel('DCT Coefficient Value');
+ylabel('Frequency');
+
+
 % DCTdecode
 % perform inverse DCT II or DCTIII algorithm for all channels Y, Cb, Cr
 % Allocate storage for inverse DCT coefficients
 IDCToutCr = zeros(size(Crmean));
 IDCToutCb = zeros(size(Cbmean));
-
 % De-Quantization
 for m = 1:8:size(DCToutCr,1)
     for n = 1:8:size(DCToutCr,2)
@@ -152,7 +171,7 @@ imshow(imageout);
 
 mse = mse_image(image, imageout);
 InputImage_bytes = size(image,1) * size(image,2) * 3;
-total_txed_size_bytes = 1000000;
+total_txed_size_bytes = numbcoeffs * 32;
 cr  = InputImage_bytes / total_txed_size_bytes;
 disp('Input image size: ' + string(InputImage_bytes/1000) + '[kb]');
 disp('transmitted image size: ' + string(total_txed_size_bytes/1000) + '[kb]');
