@@ -20,7 +20,7 @@ image = pad_image_to_multiple_of_8(needspadding);
 % subplot(1, 2, 2), imshow(image), title('Padded Image');
 %if image isn't multiple of 8 duplicate edge pixels for coherency
 % for now just truncate
-quality = 50; %quality for DCT quantization table
+quality = 1000; %quality for DCT quantization table
 
 
 %% DCT
@@ -71,12 +71,12 @@ encodeTime = toc;
 %Quantization lunimocity and chrominance
 lumqtable = jpeg_qtable(quality,0);
 chromqtable = jpeg_qtable(quality,1);
-% 
+
 % for m = 1:8:size(Crmean,1)
 %     for n = 1:8:size(Crmean,2)
 % 
-%         DCToutCr(m:m+7,n:n+7) = DCToutCr(m:m+7,n:n+7).* chromqtable;
-%         DCToutCb(m:m+7,n:n+7) = DCToutCb(m:m+7,n:n+7);
+%         DCToutCr(m:m+7,n:n+7) = round(DCToutCr(m:m+7,n:n+7)./ chromqtable);
+%         DCToutCb(m:m+7,n:n+7) = round(DCToutCb(m:m+7,n:n+7)./ chromqtable);
 %     end
 % end
 
@@ -98,14 +98,11 @@ end
 
 %Decoding
 %De-Quantization
-
 % for m = 1:8:size(DCToutCr,1)
 %     for n = 1:8:size(DCToutCr,2)
 %         %getting the block back from the coefficients
-% 
-%         IDCToutCr(m:m+7,n:n+7) = IDCToutCr(m:m+7,n:n+7)./ chromqtable;
-% 
-%         IDCToutCb(m:m+7,n:n+7) = IDCToutCr(m:m+7,n:n+7);
+%         IDCToutCr(m:m+7,n:n+7) = IDCToutCr(m:m+7,n:n+7).* chromqtable;
+%         IDCToutCb(m:m+7,n:n+7) = IDCToutCr(m:m+7,n:n+7).*chromqtable;
 %     end
 % end
 
