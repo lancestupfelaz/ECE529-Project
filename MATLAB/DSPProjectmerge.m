@@ -20,7 +20,7 @@ image = pad_image_to_multiple_of_8(needspadding);
 % subplot(1, 2, 2), imshow(image), title('Padded Image');
 %if image isn't multiple of 8 duplicate edge pixels for coherency
 % for now just truncate
-quality = 1000; %quality for DCT quantization table
+quality = 98; %quality for DCT quantization table
 
 
 %% DCT
@@ -53,28 +53,55 @@ Crmean = cast(Crmean,'int16');
 Cbmean = cast(Cbmean,'int16');
 Crmean = Crmean - 129;
 Cbmean = Cbmean - 129;
-DCToutCr = zeros(size(Crmean,1)/8,size(Crmean,2)/8);
-DCToutCb = zeros(size(Cbmean,1)/8,size(Cbmean,2)/8);
+% Assuming Crmean and Cbmean are already defined
+% Allocate storage for DCT coefficients
+DCToutCr = zeros(size(Crmean));
+DCToutCb = zeros(size(Cbmean));
+
+% Perform DCT on 8x8 blocks and store the results
 tic
 for m = 1:8:size(Crmean,1)
     for n = 1:8:size(Crmean,2)
-        blockCr = Crmean(m:m+7,n:n+7);
-        DCToutCr(m:m+7,n:n+7) = maxsforwardDCT(blockCr);
+        blockCr = Crmean(m:m+7, n:n+7);
+        DCToutCr(m:m+7, n:n+7) = maxsforwardDCT(blockCr);
 
-        blockCb = Cbmean(m:m+7,n:n+7);
-        DCToutCb(m:m+7,n:n+7) = maxsforwardDCT(blockCb);
+        blockCb = Cbmean(m:m+7, n:n+7);
+        DCToutCb(m:m+7, n:n+7) = maxsforwardDCT(blockCb);
+    end
+end
+encodeTime = toc;
+
+% Define a standard JPEG quantization table for chrominance
+chromqtable = [
+    17 18 24 47 99 99 99 99;
+    18 21 26 66 99 99 99 99;
+    24 26 56 99 99 99 99 99;
+    47 66 99 99 99 99 99 99;
+    99 99 99 99 99 99 99 99;
+    99 99 99 99 99 99 99 99;
+    99 99 99 99 99 99 99 99;
+    99 99 99 99 99 99 99 99;
+];
+
+% Quantize the DCT coefficients using the quantization table
+for m = 1:8:size(DCToutCr,1)
+    for n = 1:8:size(DCToutCr,2)
+        DCToutCr(m:m+7, n:n+7) = round(DCToutCr(m:m+7, n:n+7) ./ chromqtable);
+        DCToutCb(m:m+7, n:n+7) = round(DCToutCb(m:m+7, n:n+7) ./ chromqtable);
     end
 end
 
+
+
+
 encodeTime = toc;
+% Display encoding time
+disp(['Encode Time: ', num2str(encodeTime)]);
 
 %Quantization lunimocity and chrominance
-lumqtable = jpeg_qtable(quality,0);
-chromqtable = jpeg_qtable(quality,1);
-
+%lumqtable = jpeg_qtable(quality);
 for m = 1:8:size(Crmean,1)
     for n = 1:8:size(Crmean,2)
-
         DCToutCr(m:m+7,n:n+7) = round(DCToutCr(m:m+7,n:n+7)./ chromqtable);
         DCToutCb(m:m+7,n:n+7) = round(DCToutCb(m:m+7,n:n+7)./ chromqtable);
     end
@@ -84,27 +111,31 @@ end
 
 % DCTdecode
 % perform inverse DCT II or DCTIII algorithm for all channels Y, Cb, Cr
-IDCToutCr = zeros(size(Crmean,1),size(Crmean,2));
-IDCToutCb = zeros(size(Crmean,1),size(Crmean,2));
+% Allocate storage for inverse DCT coefficients
+IDCToutCr = zeros(size(Crmean));
+IDCToutCb = zeros(size(Cbmean));
+
+% De-Quantization
 for m = 1:8:size(DCToutCr,1)
     for n = 1:8:size(DCToutCr,2)
-        %getting the block back from the coefficients
-        block = maxsbackwardDCT(DCToutCr(m:m+7,n:n+7));
-        IDCToutCr(m:m+7,n:n+7) = block;
-        block = maxsbackwardDCT(DCToutCb(m:m+7,n:n+7));
-        IDCToutCb(m:m+7,n:n+7) = block;
+        DCToutCr(m:m+7, n:n+7) = DCToutCr(m:m+7, n:n+7) .* chromqtable;
+        DCToutCb(m:m+7, n:n+7) = DCToutCb(m:m+7, n:n+7) .* chromqtable;
     end
 end
 
-%Decoding
-%De-Quantization
+% Perform Inverse DCT on 8x8 blocks and store the results
 for m = 1:8:size(DCToutCr,1)
     for n = 1:8:size(DCToutCr,2)
-        %getting the block back from the coefficients
-        IDCToutCr(m:m+7,n:n+7) = IDCToutCr(m:m+7,n:n+7).* chromqtable;
-        IDCToutCb(m:m+7,n:n+7) = IDCToutCb(m:m+7,n:n+7).*chromqtable;
+        blockCr = maxsbackwardDCT(DCToutCr(m:m+7, n:n+7));
+        IDCToutCr(m:m+7, n:n+7) = blockCr;
+        
+        blockCb = maxsbackwardDCT(DCToutCb(m:m+7, n:n+7));
+        IDCToutCb(m:m+7, n:n+7) = blockCb;
     end
 end
+
+% Now IDCToutCr and IDCToutCb contain the decoded and de-quantized data
+
 
 IDCToutCr = IDCToutCr + 129;
 IDCToutCb = IDCToutCb + 129;
@@ -555,64 +586,24 @@ end
 
 end
 
-function t = jpeg_qtable(quality, tnum, force_baseline)
-
-if (nargin < 1)
-  quality = 50;  % default to no scaling
-end
-
-if (nargin < 2)
-  tnum = 0;
-end
-
-if (nargin < 3)
-  force_baseline=0;
-end
-
-% convert to linear quality scale
-if (quality <= 0) quality = 1; end
-if (quality > 100) quality = 100; end
-if (quality < 50)
-  quality = 5000 / quality;
-else
-  quality = 200 - quality*2;
-end
-
-
-switch(tnum)
-  case 0
-
-    % This is table 0 (the luminance table):
-    t = [ 16  11  10  16  24  40  51  61 ; ...
-	    12  12  14  19  26  58  60  55 ; ...
-	    14  13  16  24  40  57  69  56 ; ...
-	    14  17  22  29  51  87  80  62 ; ...
-	    18  22  37  56  68 109 103  77 ; ...
-	    24  35  55  64  81 104 113  92 ; ...
-	    49  64  78  87 103 121 120 101 ; ...
-	    72  92  95  98 112 100 103  99 ];
-
-  case 1
-
-    % This is table 1 (the chrominance table):
-    t = [ 17  18  24  47  99  99  99  99 ; ...
-	    18  21  26  66  99  99  99  99 ; ...
-	    24  26  56  99  99  99  99  99 ; ...
-	    47  66  99  99  99  99  99  99 ; ...
-	    99  99  99  99  99  99  99  99 ; ...
-	    99  99  99  99  99  99  99  99 ; ...
-	    99  99  99  99  99  99  99  99 ; ...
-	    99  99  99  99  99  99  99  99 ];
-
-  otherwise
-    error('Table number must be 0 or 1');
-end
-
-t = floor((t * quality + 50)/100);
-t(t<1)=1;
-
-t(t>32767)=32767;  % max quantizer needed for 12 bits
-if (force_baseline)
-  t(t>255)=255;
-end
+function Q = jpeg_qtable(quality)
+    % Standard JPEG quantization table
+    Q50 = [16 11 10 16 24 40 51 61;
+           12 12 14 19 26 58 60 55;
+           14 13 16 24 40 57 69 56;
+           14 17 22 29 51 87 80 62;
+           18 22 37 56 68 109 103 77;
+           24 35 55 64 81 104 113 92;
+           49 64 78 87 103 121 120 101;
+           72 92 95 98 112 100 103 99];
+    
+    if quality < 50
+        scale = 5000 / quality;
+    else
+        scale = 200 - 2 * quality;
+    end
+    
+    Q = floor((Q50 * scale + 50) / 100);
+    Q(Q < 1) = 1;
+    Q(Q > 255) = 255;
 end
