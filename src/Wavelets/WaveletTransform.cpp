@@ -202,6 +202,7 @@ namespace WT
 				image = LL;
 			}
 			
+			/*
 			std::cout << "=== Level " << level + 1 << " ===";
 
 			std::cout << "\nH\n";
@@ -218,7 +219,7 @@ namespace WT
 				std::cout << "\nA\n";
 				printMatrix(LL);
 			}
-
+			*/
 
 		}
 

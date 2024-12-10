@@ -2,13 +2,13 @@
 clear all;close all; clc;
 % Read an image
 % standard
-image = imread('peppers.png');
+%image = imread('../Data/peppers.png');
 % non multiple of 8
 %image = imread('\\devshares\Profiles\dpreissler\My Documents\My Pictures\ASR11.PNG');
 % 4k
-image = imread('\\devshares\Profiles\dpreissler\My Documents\My Pictures\4kwallpaper.jpg');
+%image = imread('../Data/4kwallpaper.jpg');
 % analyze format and shape of the file as a matrix
-image = imread('\\devshares\Profiles\dpreissler\My Documents\My Pictures\IRimage.jpg');
+image = imread('../Data/IRimage.jpg');
 
 whos image;
 needspadding = image;
