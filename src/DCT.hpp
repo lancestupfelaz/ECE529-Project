@@ -21,6 +21,17 @@ Matrix qTable = {
     {72, 92, 95, 98, 112, 100, 103, 99}
 };
 
+/*
+This assumes some greyscale image input
+for each 8x8 block in the image, perform the forward DCT(DCT II)
+followed by quantization, and then do dequantization, and
+the backward DCT II (DCT III)
+Then populate another matrix 8x8 at a time with the output of the 
+8x8 matrix of the DCT III or backwardDCT function
+potentially save the output
+Then calculate the SSIM, CR, and MSE
+    */
+
 
 // Forward - DCT II
 Matrix forwardDCT(const Matrix& block) {
@@ -93,6 +104,3 @@ Matrix backwardDCT(const Matrix& block) {
     }
     return OUT;
 }
-
-
-
