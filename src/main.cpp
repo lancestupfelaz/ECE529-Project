@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <iostream>
 #include "MSE.hpp"
-#include "WaveletGenerator.hpp"
+#include "WaveletTransform.hpp"
 
 
 #define STB_IMAGE_IMPLEMENTATION
@@ -13,19 +13,32 @@
 void printImageStats(char* fn);
 
 int main() {
-    //printImageStats("paris-1213603.jpg");
-    WaveletGenerator::testConvolve();
-    WaveletGenerator::testDownsample();
-    WaveletGenerator::testCustomDWT();
 
-    /*  constexpr unsigned int waveletLength = 201U;
-    std::array<float, waveletLength> wavelet = WaveletGenerator::generateMoreletWavelet<waveletLength>(1);
-    for (size_t i = 0; i < waveletLength; i++)
-    {
-        printf("%lf\n", wavelet[i]);
-    }*/
+    DWT2IDWT();
+    ////printImageStats("paris-1213603.jpg");
+    //WT::testConvolve();
+    //WT::testDownsample();
+    ////WT::testCustomDWT();
+    //WT::testCustomIDWT();
+
+
 
     return 0;
+}
+
+void DWT2IDWT()
+{
+    std::string dataPath = "";//DATA_DIR;
+
+
+    unsigned char* data = stbi_load(dataPath.c_str(), &width, &height, &channels, 0);
+
+    std::vector<std::vector<std::vector<std::vector<float>>>> coefficents = WT::customDWT(input, 2);
+
+
+    std::vector<std::vector<float>> reconstructedImage = WT::customIDWT(coefficents);
+
+
 }
 
 void printImageStats(char* fn) 

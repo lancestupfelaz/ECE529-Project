@@ -9,7 +9,9 @@ close all
 
 % convert color image to gray scale.
 %grayScaleImg = rgb2gray(im);
-grayScaleImg = [1 2 3 4; 5 6 7 8; 9 10 11 12; 13 14 15 16 ]
+grayScaleImg = [1 2 3 4; 5 6 7 8; 9 10 11 12; 13 14 15 16 ];
+grayScaleImg = reshape(1:64, 8, 8)';
+
 %figure; imshow(grayScaleImg)
 
 % levels = [1,2,3,4,5,6];

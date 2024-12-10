@@ -1,4 +1,4 @@
-#include "WaveletGenerator.hpp"
+#include "WaveletTransform.hpp"
 #include <stdexcept>
 #include <cmath>
 #include <iostream>
@@ -6,10 +6,167 @@
 
 // Lets make sure this algorithm works
 
-namespace WaveletGenerator
+namespace WT
 {
 
-	void customDWT(std::vector<std::vector<float>> image, unsigned int levels)
+	////////////////////////////////////////// IDWT ////////////////////////////////////////////////////
+	
+	std::vector<std::vector<float>> customIDWT(std::vector<std::vector<std::vector<std::vector<float>>>>& coefficents)
+	{
+		// start at the highest level
+		const unsigned int levels = coefficents.size() - 1;
+		
+		std::vector<std::vector<float>> S;
+
+		for (int level = levels; level >= 0; level--)
+		{
+			std::vector<std::vector<float>> H = coefficents[level][0];
+			std::vector<std::vector<float>> V = coefficents[level][1];
+			std::vector<std::vector<float>> D = coefficents[level][2];
+			std::vector<std::vector<float>> A;
+
+			if (level == levels)
+			{
+				A = coefficents[level][3];
+			}
+			else 
+			{
+				A = S;
+			}
+			A = interpolateColumnsAndLowPass(A);
+			H = interpolateColumnsAndHighPass(H);
+
+			std::vector<std::vector<float>> L = interpolateRowsAndLowPass(A + H);
+
+		
+			D = interpolateColumnsAndHighPass(D);
+			V = interpolateColumnsAndLowPass(V);
+
+			H = interpolateRowsAndHighPass(D + V);
+
+			S = H + L;
+
+		}
+
+		return S;
+	
+	}
+
+
+	std::vector<std::vector<float>> interpolateColumnsAndHighPass(const std::vector<std::vector<float>>& input)
+	{
+		std::vector<float> highpass = { -0.7071, 0.7071 };
+		return interpolateColumnsAndConv(highpass, input);
+	}
+
+	std::vector<std::vector<float>> interpolateColumnsAndLowPass(const std::vector<std::vector<float>>& input)
+	{
+		std::vector<float> lowpass = { 0.7071, 0.7071 };
+		return interpolateColumnsAndConv(lowpass, input);
+
+	}
+
+	std::vector<std::vector<float>> interpolateRowsAndHighPass(const std::vector<std::vector<float>>& input)
+	{
+		std::vector<float> highpass = { -0.7071, 0.7071 };
+		return interpolateRowsAndConv(highpass, input);
+	}
+
+	std::vector<std::vector<float>> interpolateRowsAndLowPass(const std::vector<std::vector<float>>& input)
+	{
+		std::vector<float> lowpass = { 0.7071, 0.7071 };
+		return interpolateRowsAndConv(lowpass, input);
+	}
+
+	std::vector<std::vector<float>> interpolateRowsAndConv(std::vector<float> filter, std::vector<std::vector<float>> input)
+	{
+		const unsigned int numColumns = input[0].size();
+		const unsigned int numRows = input.size();
+
+		std::vector<std::vector<float>> output = formOutputMatrix(numRows, numColumns*2);
+
+		for (unsigned int rowIdx = 0; rowIdx < numRows; rowIdx++)
+		{
+
+			std::vector<float> row = getRow(input, rowIdx);
+			// pad column symmetricly
+			row.insert(row.begin(), row[1]);
+			std::vector<float> upSampledRow = upsample(row, 2);
+			std::vector<float> convRow = convolve(upSampledRow, filter);
+			convRow.erase(convRow.begin());
+			convRow.erase(convRow.begin() + convRow.size() - 1);
+
+			setRow(convRow, output, rowIdx);
+		}
+
+		return output;
+	}
+
+	std::vector<std::vector<float>> interpolateColumnsAndConv(std::vector<float> filter, std::vector<std::vector<float>> input)
+	{
+		const unsigned int numColumns = input[0].size();
+		const unsigned int numRows = input.size();
+
+		std::vector<std::vector<float>> output = formOutputMatrix(numRows * 2, numColumns);
+
+		for (unsigned int columnIdx = 0; columnIdx < numColumns; columnIdx++)
+		{
+
+			std::vector<float> column = getColumn(input, columnIdx);
+			// pad column symmetricly
+			column.insert(column.begin(), column[1]);
+			std::vector<float> upSampledColumn = upsample(column, 2);
+			std::vector<float> convColumn = convolve(upSampledColumn, filter);
+			convColumn.erase(convColumn.begin());
+			convColumn.erase(convColumn.begin() + convColumn.size() - 1);
+
+			setColumn(convColumn, output, columnIdx);
+		}
+
+		return output;
+	}
+
+	std::vector<float> upsample(const std::vector<float>& input, const int rate)
+	{
+		std::vector<float> output;
+		output.resize(input.size() * rate);
+
+		for (int i = 0; i < output.size(); i++)
+		{
+			output[i] = (i % rate == 0) ? input[i / rate] : 0.0f;
+		}
+
+		return output;
+	}
+
+
+	void testCustomIDWT()
+	{
+		std::vector<std::vector<float>> input = {
+			{ 1.0f,  2.0f,  3.0f,  4.0f,  5.0f,  6.0f,  7.0f,  8.0f},
+			{ 9.0f, 10.0f, 11.0f, 12.0f, 13.0f, 14.0f, 15.0f, 16.0f},
+			{17.0f, 18.0f, 19.0f, 20.0f, 21.0f, 22.0f, 23.0f, 24.0f},
+			{25.0f, 26.0f, 27.0f, 28.0f, 29.0f, 30.0f, 31.0f, 32.0f},
+			{33.0f, 34.0f, 35.0f, 36.0f, 37.0f, 38.0f, 39.0f, 40.0f},
+			{41.0f, 42.0f, 43.0f, 44.0f, 45.0f, 46.0f, 47.0f, 48.0f},
+			{49.0f, 50.0f, 51.0f, 52.0f, 53.0f, 54.0f, 55.0f, 56.0f},
+			{57.0f, 58.0f, 59.0f, 60.0f, 61.0f, 62.0f, 63.0f, 64.0f}
+		};
+
+		std::vector<std::vector<std::vector<std::vector<float>>>> coefficents = customDWT(input, 2);
+
+		std::vector<std::vector<float>> reconstructedImage = customIDWT(coefficents);
+
+		std::cout << "reconstructed Image" << std::endl;
+		printMatrix(reconstructedImage);
+
+	}
+
+
+
+	////////////////////////////////////////// DWT ////////////////////////////////////////////////////
+
+	std::vector<std::vector<std::vector<std::vector<float>>>> customDWT(std::vector<std::vector<float>> image, unsigned int levels)
 	{
 		std::vector<std::vector<std::vector<std::vector<float>>>> coefficentsByLevel;
 		coefficentsByLevel.resize(levels);
@@ -33,8 +190,8 @@ namespace WaveletGenerator
 			coefficentsByLevel[level].resize(numCoefficents);
 
 			coefficentsByLevel[level][0] = LH;
-			coefficentsByLevel[level][1] = HH;
-			coefficentsByLevel[level][2] = HL;
+			coefficentsByLevel[level][1] = HL;
+			coefficentsByLevel[level][2] = HH;
 			
 			if (level == levels - 1)
 			{
@@ -65,7 +222,7 @@ namespace WaveletGenerator
 
 		}
 
-
+		return coefficentsByLevel;
 	}
 
 	std::vector<std::vector<float>> highpassRowsAndDecimate(std::vector<std::vector<float>>& input)
@@ -79,14 +236,12 @@ namespace WaveletGenerator
 		return convColumnsAndDecimate(filter, input);
 	}
 
-
 	std::vector<std::vector<float>> lowpassRowsAndDecimate(std::vector<std::vector<float>>& input)
 	{
 		std::vector<float> filter = { 0.7071f, 0.7071f };
 
 		return convRowsAndDecimate(filter, input);
 	}
-
 	std::vector<std::vector<float>> lowpassColumnsAndDecimate(std::vector<std::vector<float>>& input)
 	{
 		std::vector<float> filter = { 0.7071f, 0.7071f };
@@ -96,8 +251,8 @@ namespace WaveletGenerator
 
 	std::vector<std::vector<float>> convRowsAndDecimate(const std::vector<float>& filter, const std::vector<std::vector<float>>& input)
 	{
-		const unsigned int numColumns = input.size();
-		const unsigned int numRows = input[0].size();
+		const unsigned int numColumns = input[0].size();
+		const unsigned int numRows = input.size();
 
 		std::vector<std::vector<float>> output = formOutputMatrix(numRows, numColumns / 2);
 
@@ -113,8 +268,6 @@ namespace WaveletGenerator
 
 		return output;
 	}
-
-	// input is rows by columns
 	std::vector<std::vector<float>> convColumnsAndDecimate(const std::vector<float>& filter, const std::vector<std::vector<float>>& input)
 	{
 		const unsigned int numColumns = input[0].size();
@@ -147,7 +300,6 @@ namespace WaveletGenerator
 
 		return output;
 	}
-
 
 	std::vector<float> getColumn(const std::vector<std::vector<float>>& input, const unsigned int columnIdx)
 	{
@@ -229,6 +381,8 @@ namespace WaveletGenerator
 		
 	}
 
+
+
 	void testCustomDWT()
 	{
 		std::vector<std::vector<float>> input = {
@@ -292,4 +446,37 @@ namespace WaveletGenerator
 
 	}
 
+
+	std::vector<float> operator+(const std::vector<float>& a, const std::vector<float>& b) 
+	{
+
+		if (a.size() != b.size()) {
+			throw std::invalid_argument("Vectors must be of the same size for addition.");
+		}
+
+		std::vector<float> output(a.size());
+		for (size_t i = 0; i < a.size(); ++i) {
+			output[i] = a[i] + b[i];
+		}
+
+		return output;
+	}
+
+	std::vector<std::vector<float>> operator+(const std::vector<std::vector<float>>& a, const std::vector<std::vector<float>>& b)
+	{
+
+		if (a.size() != b.size()) {
+			throw std::invalid_argument("Outer sizes of the matrices must be the same for addition.");
+		}
+
+		std::vector<std::vector<float>> output;
+		output.resize(a.size());
+
+		for (size_t i = 0; i < a.size(); i++)
+		{
+			output[i] = a[i] + b[i];
+		}
+
+		return output;
+	}
 }

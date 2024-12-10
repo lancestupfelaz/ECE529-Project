@@ -2,11 +2,11 @@
 set(target Wavelets)
 
 set(sources 
-	WaveletGenerator.cpp
+	WaveletTransform.cpp
 	)
 
 set( headers
-	WaveletGenerator.hpp
+	WaveletTransform.hpp
 	)
 
 

@@ -8,13 +8,26 @@
 // https://en.wikipedia.org/wiki/Morlet_wavelet
 
 
-namespace WaveletGenerator
+namespace WT
 {
-	template<unsigned int length>
-	std::array<float, length> generateMoreletWavelet(float k);
+	////////////////////////////////////////// IDWT ////////////////////////////////////////////////////
+
+	std::vector<std::vector<float>> customIDWT(std::vector<std::vector<std::vector<std::vector<float>>>>& coefficents);
 
 
-	void customDWT(std::vector<std::vector<float>> image, unsigned int levels);
+	std::vector<std::vector<float>> interpolateColumnsAndLowPass(const std::vector<std::vector<float>>& input);
+	std::vector<std::vector<float>> interpolateColumnsAndHighPass(const std::vector<std::vector<float>>& input);
+
+	std::vector<std::vector<float>> interpolateRowsAndHighPass(const std::vector<std::vector<float>>& input);
+	std::vector<std::vector<float>> interpolateRowsAndLowPass(const std::vector<std::vector<float>>& input);
+
+	std::vector<std::vector<float>> interpolateRowsAndConv(std::vector<float> filter, std::vector<std::vector<float>> input);
+	std::vector<std::vector<float>> interpolateColumnsAndConv(std::vector<float> filter, std::vector<std::vector<float>> input);
+	std::vector<float> upsample(const std::vector<float>& input, const int rate);
+
+	////////////////////////////////////////// DWT ////////////////////////////////////////////////////
+
+	std::vector<std::vector<std::vector<std::vector<float>>>> customDWT(std::vector<std::vector<float>> image, unsigned int levels);
 
 	std::vector<std::vector<float>> lowpassRowsAndDecimate(std::vector<std::vector<float>>& input);
 	std::vector<std::vector<float>> lowpassColumnsAndDecimate(std::vector<std::vector<float>>& input);
@@ -37,10 +50,19 @@ namespace WaveletGenerator
 	void setColumn(const std::vector<float> input, std::vector<std::vector<float>>& output, const unsigned int columnIdx);
 
 	void testCustomDWT();
+	void testCustomIDWT();
+
 	void testDownsample();
 	void testConvolve();
 
 	void printMatrix(std::vector<std::vector<float>> input);
+
+	// operator overloads
+
+	std::vector<float> operator+(const std::vector<float>& a, const std::vector<float>& b);
+	std::vector<std::vector<float>> operator+(const std::vector<std::vector<float>>& a, const std::vector<std::vector<float>>& b);
+
+
 }
 
 
