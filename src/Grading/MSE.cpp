@@ -1,6 +1,8 @@
 #include "MSE.hpp"
 #include "stdio.h"
 
+#include <opencv2/opencv.hpp>
+
 // Lets make sure this algorithm works
 
 namespace MSE

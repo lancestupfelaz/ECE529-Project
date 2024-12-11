@@ -4,8 +4,6 @@
 #include <stdio.h>
 #include <vector>
 
-// algorithm:
-// https://en.wikipedia.org/wiki/Morlet_wavelet
 
 
 namespace WT
