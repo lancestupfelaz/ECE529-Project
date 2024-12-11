@@ -26,4 +26,4 @@ add_compile_definitions(DATA_DIR="${DATA_DIR}")
 
 # Add an executable target
 add_executable(MyProject ${sources})
-target_link_libraries(MyProject PUBLIC Grading ImageIO Wavelets )
+target_link_libraries(MyProject PUBLIC Grading ImageIO Wavelets DCT )

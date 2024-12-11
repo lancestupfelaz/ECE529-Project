@@ -2,6 +2,7 @@
 #include <iostream>
 #include "MSE.hpp"
 #include "WaveletTransform.hpp"
+#include "DCT.hpp"
 
 
 #define STB_IMAGE_IMPLEMENTATION
@@ -12,6 +13,7 @@
 
 void printImageStats(char* fn);
 void DWT2IDWT();
+void DCT2IDCT();
 std::vector<std::vector<float>> imageToVector(unsigned char* input_image, int width, int height, int channels);
 void saveGrayscaleImage(const std::vector<std::vector<float>>& grayscale, const std::string& filename);
 
@@ -23,10 +25,77 @@ int main() {
     //WT::testDownsample();
     ////WT::testCustomDWT();
     //WT::testCustomIDWT();
-
+    
+    DCT2IDCT();
 
 
     return 0;
+}
+
+void DCT2IDCT()
+
+{
+    std::string dataPath = "..\\..\\Data\\women_512x512.png";//DATA_DIR;
+    int width, height, channels;
+    unsigned char* data = stbi_load(dataPath.c_str(), &width, &height, &channels, 0);
+    std::vector<std::vector<float>> img = imageToVector(data, width, height, channels);
+
+    cout << "height: " << height << endl;
+    cout << "width: " << width << endl;
+    cout << "channels: " << channels << endl;
+
+    // Output matrix for the processed image
+    Matrix imgOut(height, vector<float>(width, 0.0f));
+    Matrix coeffs(height, vector<float>(width, 0.0f));
+
+    // Iterate over each 8x8 block
+    for (int m = 0; m < height; m += 8) {
+        for (int n = 0; n < width; n += 8) {
+            // Extract 8x8 block
+            Matrix block(8, vector<float>(8, 0.0f));
+            for (int i = 0; i < 8 && m + i < height; ++i) {
+                for (int j = 0; j < 8 && n + j < width; ++j) {
+                    block[i][j] = img[m + i][n + j];
+                }
+            }
+
+            // Process block
+            Matrix processedBlock = forwardDCT(block);
+            // Matrix processedBlock = quantize(forwardDCT(block));
+
+            // Copy back the processed block
+            for (int i = 0; i < 8 && m + i < height; ++i) {
+                for (int j = 0; j < 8 && n + j < width; ++j) {
+                    coeffs[m + i][n + j] = processedBlock[i][j];
+                }
+            }
+        }
+    }
+
+    // Iterate over each 8x8 block
+    for (int m = 0; m < height; m += 8) {
+        for (int n = 0; n < width; n += 8) {
+            // Extract 8x8 block
+            Matrix block(8, vector<float>(8, 0.0f));
+            for (int i = 0; i < 8 && m + i < height; ++i) {
+                for (int j = 0; j < 8 && n + j < width; ++j) {
+                    block[i][j] = coeffs[m + i][n + j];
+                }
+            }
+
+            // Process block
+            Matrix processedBlock = backwardDCT(block);
+            // Matrix processedBlock = dequantize(backwardDCT(block));
+
+            // Copy back the processed block
+            for (int i = 0; i < 8 && m + i < height; ++i) {
+                for (int j = 0; j < 8 && n + j < width; ++j) {
+                    imgOut[m + i][n + j] = processedBlock[i][j];
+                }
+            }
+        }
+    }
+
 }
 
 void DWT2IDWT()
