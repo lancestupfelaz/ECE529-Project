@@ -3,7 +3,8 @@
 #include "MSE.hpp"
 #include "WaveletTransform.hpp"
 #include "DCT.hpp"
-
+#include <chrono>
+//#include <opencv2/opencv.hpp>
 
 #define STB_IMAGE_IMPLEMENTATION
 #define STB_IMAGE_WRITE_IMPLEMENTATION
@@ -11,23 +12,45 @@
 #include "ThirdPartyLibraries/stb_image_write.h"
 
 
+
+// Global variable for the data path
+std::string dataPath = "..\\..\\Data\\women_512x512.png";
+
 void printImageStats(char* fn);
 void DWT2IDWT();
 void DCT2IDCT();
 std::vector<std::vector<float>> imageToVector(unsigned char* input_image, int width, int height, int channels);
 void saveGrayscaleImage(const std::vector<std::vector<float>>& grayscale, const std::string& filename);
-
+using Matrix = std::vector<std::vector<float>>;
 int main() {
 
+    // Start measuring time
+    auto startDWT = std::chrono::high_resolution_clock::now();
     DWT2IDWT();
     ////printImageStats("paris-1213603.jpg");
     //WT::testConvolve();
     //WT::testDownsample();
     ////WT::testCustomDWT();
     //WT::testCustomIDWT();
-    
-    DCT2IDCT();
+    // 
+    // 
+        // Stop measuring time
+    auto stopDWT = std::chrono::high_resolution_clock::now();
+    // Calculate the duration in milliseconds
+    auto durationDWT = std::chrono::duration_cast<std::chrono::milliseconds>(stopDWT - startDWT);
+    // Print the duration
 
+    std::cout << "DWT2IDWT function took " << durationDWT.count() << " milliseconds to execute." << std::endl;
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////
+    // Start measuring time
+    auto start = std::chrono::high_resolution_clock::now();
+    DCT2IDCT();
+    // Stop measuring time
+    auto stop = std::chrono::high_resolution_clock::now();
+    // Calculate the duration in milliseconds
+    auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(stop - start);
+    // Print the duration
+    std::cout << "DCT2IDCT function took " << duration.count() << " milliseconds to execute." << std::endl;
 
     return 0;
 }
@@ -35,14 +58,10 @@ int main() {
 void DCT2IDCT()
 
 {
-    std::string dataPath = "..\\..\\Data\\women_512x512.png";//DATA_DIR;
     int width, height, channels;
     unsigned char* data = stbi_load(dataPath.c_str(), &width, &height, &channels, 0);
     std::vector<std::vector<float>> img = imageToVector(data, width, height, channels);
 
-    cout << "height: " << height << endl;
-    cout << "width: " << width << endl;
-    cout << "channels: " << channels << endl;
 
     // Output matrix for the processed image
     Matrix imgOut(height, vector<float>(width, 0.0f));
@@ -61,7 +80,7 @@ void DCT2IDCT()
 
             // Process block
             Matrix processedBlock = forwardDCT(block);
-            // Matrix processedBlock = quantize(forwardDCT(block));
+            quantize(processedBlock,qTable);
 
             // Copy back the processed block
             for (int i = 0; i < 8 && m + i < height; ++i) {
@@ -85,7 +104,7 @@ void DCT2IDCT()
 
             // Process block
             Matrix processedBlock = backwardDCT(block);
-            // Matrix processedBlock = dequantize(backwardDCT(block));
+            dequantize(processedBlock,qTable);
 
             // Copy back the processed block
             for (int i = 0; i < 8 && m + i < height; ++i) {
@@ -93,8 +112,12 @@ void DCT2IDCT()
                     imgOut[m + i][n + j] = processedBlock[i][j];
                 }
             }
+            
         }
     }
+
+saveGrayscaleImage(imgOut, "outputImgDCT.png");
+// compare img and imgOut SSIM, MSE CR
 
 }
 
