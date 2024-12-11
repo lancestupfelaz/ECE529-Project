@@ -49,10 +49,6 @@ void DWT2IDWT()
 
 void saveGrayscaleImage(const std::vector<std::vector<float>>& grayscale, const std::string& filename) {
 
-    if (grayscale.empty() || grayscale[0].empty()) {
-        throw std::invalid_argument("Grayscale image data is empty.");
-    }
-
     int height = grayscale.size();
     int width = grayscale[0].size();
 

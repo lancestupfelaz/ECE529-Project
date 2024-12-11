@@ -4,8 +4,6 @@
 #include <iostream>
 #include <iomanip>
 
-// Lets make sure this algorithm works
-
 namespace WT
 {
 
