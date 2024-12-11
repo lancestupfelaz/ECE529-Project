@@ -1,0 +1,4 @@
+[submodule "src/ThirdPartyLibraries/OpenCV"]
+	path = src/ThirdPartyLibraries/OpenCV
+	url = https://github.com/opencv/opencv.git
+	branch = master
