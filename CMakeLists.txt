@@ -7,9 +7,32 @@ set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++20")
 
+
+
+
+
+include(ExternalProject)
+
+# Define where OpenCV will be built and installed
+set(OpenCV_SOURCE_DIR ${CMAKE_SOURCE_DIR}/src/ThirdPartyLibraries/OpenCV)
+set(OpenCV_INSTALL_DIR ${CMAKE_BINARY_DIR}/opencv)
+set(OpenCV_BUILD_DIR ${CMAKE_BINARY_DIR}/opencv)
+
+# ExternalProject to build OpenCV
+ExternalProject_Add(OpenCV
+    PREFIX ${CMAKE_BINARY_DIR}/OpenCV
+    SOURCE_DIR ${OpenCV_SOURCE_DIR}
+    CMAKE_ARGS
+        -DCMAKE_INSTALL_PREFIX=${OpenCV_INSTALL_DIR}   # Install OpenCV here
+        -DCMAKE_BUILD_TYPE=Debug                    # Build type
+        -DBUILD_EXAMPLES=OFF                          # Example option
+        -DBUILD_TESTS=OFF                             # Disable tests for faster build
+    BUILD_COMMAND ${CMAKE_COMMAND} --build <BINARY_DIR> --config Debug
+    BUILD_ALWAYS OFF  # Set to ON if you want to rebuild OpenCV every time
+)
+
+
 add_subdirectory(src)
-
-
 
 set(sources 
 	src/main.cpp
