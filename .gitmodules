@@ -1,3 +1,0 @@
-[submodule "src/ThirdPartLibraries"]
-	path = src/ThirdPartLibraries
-	url = https://github.com/opencv/opencv.git
