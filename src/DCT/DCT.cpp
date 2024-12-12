@@ -15,7 +15,6 @@ Matrix qTable = {
 };
 
 
-
 Matrix forwardDCT(const Matrix& block) {
     int m = block.size();
     int n = block[0].size();
@@ -30,8 +29,8 @@ Matrix forwardDCT(const Matrix& block) {
             for (int i = 0; i < m; ++i) {
                 for (int j = 0; j < n; ++j) {
                     sum += block[i][j] *
-                        cos(M_PI * (2 * i + 1) * p / (2 * m)) *
-                        cos(M_PI * (2 * j + 1) * q / (2 * n));
+                        std::cos(M_PI * (2 * i + 1) * p / (2 * m)) *
+                        std::cos(M_PI * (2 * j + 1) * q / (2 * n));
                 }
             }
             OUT[p][q] = ap * aq * sum;
@@ -39,7 +38,6 @@ Matrix forwardDCT(const Matrix& block) {
     }
     return OUT;
 }
-
 
 // Quantize DCT coefficients
 void quantize(Matrix& block, const Matrix& qTable) {

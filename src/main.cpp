@@ -4,7 +4,8 @@
 #include "WaveletTransform.hpp"
 #include "DCT.hpp"
 #include <chrono>
-//#include <opencv2/opencv.hpp>
+#include <cstdint>
+
 
 #define STB_IMAGE_IMPLEMENTATION
 #define STB_IMAGE_WRITE_IMPLEMENTATION
@@ -67,6 +68,8 @@ void DCT2IDCT()
     Matrix imgOut(height, vector<float>(width, 0.0f));
     Matrix coeffs(height, vector<float>(width, 0.0f));
 
+
+
     // Iterate over each 8x8 block
     for (int m = 0; m < height; m += 8) {
         for (int n = 0; n < width; n += 8) {
@@ -90,7 +93,10 @@ void DCT2IDCT()
             }
         }
     }
-
+    // Huffman encoding
+    std::vector<unsigned char> encodedData;
+    MSE::huffmanEncoding(coeffs, encodedData);
+    float compressionRatio = float(width * height * channels) / encodedData.size();
     // Iterate over each 8x8 block
     for (int m = 0; m < height; m += 8) {
         for (int n = 0; n < width; n += 8) {
@@ -118,6 +124,13 @@ void DCT2IDCT()
 
 saveGrayscaleImage(imgOut, "outputImgDCT.png");
 // compare img and imgOut SSIM, MSE CR
+
+//Metrics calculation
+float mse = MSE::calculateMSE(img, imgOut);
+//float ssim = MSE::calculateSSIM(img, imgOut); // Print metrics
+std::cout << "MSE: " << mse << std::endl;
+//std::cout << "SSIM: " << ssim << std::endl;
+std::cout << "Compression Ratio: " << compressionRatio << std::endl;
 
 }
 

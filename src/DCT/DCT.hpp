@@ -3,6 +3,7 @@
 #include <cmath>
 #include <fstream>
 #include <algorithm>
+#include <cstdint>
 
 using namespace std;
 using Matrix = vector<vector<float>>;

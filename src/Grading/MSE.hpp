@@ -1,3 +1,6 @@
+#include <vector>
+#include <cstdint>
+
 #ifndef MSE_HPP
 #define MSE_HPP
 // This class will find the mean squared error between two images.
@@ -6,8 +9,15 @@
 // https://en.wikipedia.org/wiki/Mean_squared_error
 
 
+
 namespace MSE
 {
+
+	using Matrix = std::vector<std::vector<float>>;
+	float calculateMSE(const Matrix& img1, const Matrix& img2);
+//	float calculateSSIM(const Matrix& img1, const Matrix& img2);
+	void huffmanEncoding(const Matrix& input, std::vector<unsigned char>& output);
+
 	template<typename T>
 	double error(T* v1, T* v2, const unsigned int length)
 	{
