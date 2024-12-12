@@ -20,7 +20,7 @@ set(OpenCV_BUILD_DIR ${CMAKE_BINARY_DIR}/opencv)
 
 # ExternalProject to build OpenCV
 ExternalProject_Add(OpenCV
-    PREFIX ${CMAKE_BINARY_DIR}/OpenCV
+    PREFIX ${CMAKE_BINARY_DIR}/../OpenCV
     SOURCE_DIR ${OpenCV_SOURCE_DIR}
     CMAKE_ARGS
         -DCMAKE_INSTALL_PREFIX=${OpenCV_INSTALL_DIR}   # Install OpenCV here
