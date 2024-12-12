@@ -11,6 +11,10 @@ clear all;close all; clc;
 %image = imread('../Data/IRimage.jpg');
 
 image = imread('peppers.png');
+%image = imread('\\devshares\Profiles\dpreissler\My Documents\My Pictures\4kwallpaper.jpg');
+%image = imread('\\devshares\Profiles\dpreissler\My Documents\My Pictures\IRimage.jpg');
+%image = imread('\\devshares\Profiles\dpreissler\My Documents\My Pictures\ASR11.PNG');
+
 whos image;
 needspadding = image;
 image = pad_image_to_multiple_of_8(needspadding);
@@ -35,6 +39,9 @@ grayImage = grayImage - 129;
 % Allocate storage for DCT coefficients
 DCTout = zeros(size(grayImage));
 % Perform DCT on 8x8 blocks and store the results
+
+
+tic;
 for m = 1:8:size(grayImage,1)
     for n = 1:8:size(grayImage,2)
         block = grayImage(m:m+7, n:n+7);
@@ -43,6 +50,9 @@ for m = 1:8:size(grayImage,1)
 
     end
 end
+nonZeroCoeff = DCTout(DCTout ~= 0);
+encodedIdxs = (differenceEncode(DCTout));
+recoveredCoeffcients = reconstructCoefficentMatrix(encodedIdxs, nonZeroCoeff, length(DCTout));
 
 % DCTdecode
 IDCTout = zeros(size(DCTout));
@@ -59,6 +69,8 @@ end
 IDCTout = IDCTout + 129;
 IDCTout = cast(IDCTout, 'uint8');
 imageout = IDCTout;
+elapsedTime = toc;
+disp(['Elapsed time: ', num2str(elapsedTime), ' seconds'])
 
 figure;
 title('DCT Before and after Reconstruction')
@@ -67,14 +79,16 @@ imshow(origGray);
 subplot(1,2,2)
 imshow(imageout);
 
+Idx_size_bytes = length(encodedIdxs) * 2;
+coefficent_size_bytes = length(DCTout) * 1;
+total_txed_size_bytes = Idx_size_bytes + coefficent_size_bytes;
+disp('transmitted image size: ' + string(total_txed_size_bytes/1000) + '[kb]');
 mse = mse_image(origGray, imageout);
-InputImage_bytes = size(origGray,1) * size(origGray,2) * 3;
-%total_txed_size_bytes = numbcoeffs * 32;
-%cr  = InputImage_bytes / total_txed_size_bytes;
+InputImage_bytes = size(origGray,1) * size(origGray,2);
+cr  = InputImage_bytes / total_txed_size_bytes;
 disp('Input image size: ' + string(InputImage_bytes/1000) + '[kb]');
-%disp('transmitted image size: ' + string(total_txed_size_bytes/1000) + '[kb]');
 disp("DCT Mean Squared Error: " + num2str(mse));
-%disp("DCT compression ratio " + num2str(cr));
+disp("DCT compression ratio " + num2str(cr));
 disp("DCT Structural Similarity Index(ssim): " + num2str(ssim(origGray,imageout)));
 disp("DCT Peak Signal-to-noise ratio (PSNR): " + num2str(psnr(origGray,imageout)));
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -106,9 +120,10 @@ grayScaleImg = rgb2gray(im);
 % figure; imagesc((mse)); colorbar; ylabel('level'); xlabel('threshold')
 % figure; imagesc((cr)); colorbar; ylabel('level'); xlabel('threshold')
 % 
-
+tic;
 waveletProcessing(grayScaleImg, 5, 0.015 );
-
+elapsedTime = toc;
+disp(['Elapsed time: ', num2str(elapsedTime), ' seconds'])
 %% wavelet transform parameters
 function [mse,cr] = waveletProcessing(grayScaleImg, levels, threshold)
 
