@@ -25,7 +25,6 @@ namespace MSE
 
 	}
 
-}
 
 // Huffman encoding function
 void huffmanEncoding(const Matrix& input, std::vector<unsigned char>& output) {
@@ -68,3 +67,6 @@ float calculateSSIM(const Matrix& img1, const Matrix& img2) {
     return cv::quality::QualitySSIM::compute(mat1, mat2, noArray()).val[0];
 }
 */
+
+
+}

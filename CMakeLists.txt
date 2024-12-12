@@ -10,7 +10,6 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++20")
 
 
 
-
 include(ExternalProject)
 
 # Define where OpenCV will be built and installed
@@ -32,7 +31,7 @@ ExternalProject_Add(OpenCV
 )
 
 
-add_subdirectory(src)
+add_subdirectory(src)  
 
 set(sources 
 	src/main.cpp
